@@ -12,6 +12,7 @@ export const cambiarPlan = async (req, res) => {
             return res.status(404).json({ error: "Usuario no encontrado" });
         }
 
+<<<<<<< HEAD
         // El requerimiento dice: "Cambiar de plan solamente requiere estar en el plan plus"
         if (usuario.plan !== 'plus') {
             return res.status(400).json({ error: "El usuario ya es premium o no es elegible" });
