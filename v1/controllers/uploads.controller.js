@@ -23,6 +23,9 @@ export const subirImagen = async (req, res) => {
         return res.json({ url: result.secure_url, folder: result.folder });
     } catch (error) {
         console.error("Error al subir imagen:", error);
-        return res.status(500).json({ error: "Error al subir imagen" });
+        return res.status(500).json({
+            error: "Error al subir imagen",
+            details: error?.message || "Error desconocido"
+        });
     }
 };

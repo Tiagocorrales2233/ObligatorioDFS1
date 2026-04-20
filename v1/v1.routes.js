@@ -6,6 +6,8 @@ import usuariosRouter from './routes/usuarios.routes.js';
 import authRouter from './routes/auth.routes.js';
 import aiRouter from './routes/ai.routes.js';
 import uploadsRouter from './routes/uploads.routes.js';
+import categoriasRouter from './routes/categoria.routes.js';
+import jugadoresRouter from './routes/jugador.routes.js';
 import { authorizationMiddleware } from './middlewares/authorization.middleware.js';
 
 const router = express.Router({mergeParams: true});
@@ -19,5 +21,6 @@ router.use(authorizationMiddleware);
 router.use("/usuarios", usuariosRouter);
 router.use("/uploads", uploadsRouter);
 router.use("/ai", aiRouter);
-
+router.use("/categorias", categoriasRouter);
+router.use("/jugadores", jugadoresRouter);
 export default router;

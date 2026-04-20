@@ -5,6 +5,7 @@ const router = express.Router({mergeParams: true});
 
 
 router.get("/", getModels);
+router.post("/", useGemini25Flash);
 router.post("/gemini-2.5-flash", useGemini25Flash);
 
 export default router;
