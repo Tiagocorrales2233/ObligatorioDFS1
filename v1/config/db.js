@@ -3,7 +3,7 @@ import mongoose from 'mongoose';
 export const connectDB = async () => {
   try {
     // Aquí usamos la URL que pasaste por WhatsApp
-    const url = process.env.MONGO_URI || "mongodb://localhost:27017/obligatorio_dfs";
+    const url = process.env.MONGO_URI?.trim() || "mongodb://localhost:27017/obligatorio_dfs";
     
     await mongoose.connect(url);
     
