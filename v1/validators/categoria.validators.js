@@ -2,7 +2,7 @@ import Joi from "joi";
 
 export const categoriaSchema = Joi.object({
   nombre: Joi.string()
-    .valid("Arquero", "Defensa", "Mediocampista", "Delantero")
+    .valid("Arquero", "Defensa", "Mediocampista", "Delantero", "Lateral", "Volante", "Extremo", "Pivote", "Falso 9", "Enganche", "Carrilero", "Libero", "Centrocampista Defensivo", "Centrocampista Ofensivo")
     .required()
     .messages({
       "any.only": "La categoría debe ser Arquero, Defensa, Mediocampista o Delantero",

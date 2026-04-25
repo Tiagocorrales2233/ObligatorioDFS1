@@ -5,6 +5,77 @@ import {
 	actualizarJugadorService,
 	eliminarJugadorService,
 } from "../services/jugador.services.js";
+import axios from "axios";
+import { generateGeminiText } from "../services/gemini.services.js";
+
+const paisesEnIngles = [
+	"Argentina",
+	"Brazil",
+	"Spain",
+	"France",
+	"Germany",
+	"Italy",
+	"England",
+	"Portugal",
+	"Netherlands",
+	"Belgium",
+	"Uruguay",
+	"Chile",
+	"Mexico",
+	"Colombia",
+	"Ecuador",
+	"Paraguay",
+	"Peru",
+	"United States",
+	"Canada",
+	"Japan",
+	"South Korea",
+	"Morocco",
+	"Nigeria",
+	"Senegal",
+];
+
+const obtenerEquipoRandomApiSports = async () => {
+	const apiKey = process.env.APISPORTS_KEY || "6d857adfc997c9ba70e132d6174933d5";
+	const country = paisesEnIngles[Math.floor(Math.random() * paisesEnIngles.length)];
+	const url = `https://v3.football.api-sports.io/teams?country=${encodeURIComponent(country)}`;
+
+	const response = await axios.get(url, {
+		headers: {
+			"x-apisports-key": apiKey,
+		},
+	});
+
+	const teams = response.data?.response;
+	if (!Array.isArray(teams) || teams.length === 0) {
+		throw new Error(`No se encontraron equipos para ${country}`);
+	}
+
+	const randomTeam = teams[Math.floor(Math.random() * teams.length)];
+	const teamName = randomTeam?.team?.name;
+
+	if (!teamName) {
+		throw new Error(`La API no devolvio un nombre de equipo para ${country}`);
+	}
+
+	return teamName;
+};
+
+const parseGeminiJson = (value) => {
+	if (!value || typeof value !== "string") return null;
+
+	const clean = value
+		.replace(/^```json\s*/i, "")
+		.replace(/^```\s*/i, "")
+		.replace(/```$/i, "")
+		.trim();
+
+	try {
+		return JSON.parse(clean);
+	} catch {
+		return null;
+	}
+};
 
 export const crearJugador = async (req, res) => {
 	try {
@@ -15,14 +86,38 @@ export const crearJugador = async (req, res) => {
 			return res.status(401).json({ message: "No autorizado" });
 		}
 
+		const equipoRandom = await obtenerEquipoRandomApiSports();
+
 		const jugadorCreado = await crearJugadorService({
 			...datosJugador,
+			equipo: equipoRandom,
 			usuario: usuarioId,
 		});
+
+		const prompt = `Genera caracteristicas ficticias e inventadas para este jugador de futbol recien creado: nombre ${jugadorCreado?.nombre || datosJugador?.nombre}, apellido ${jugadorCreado?.apellido || datosJugador?.apellido}, edad ${jugadorCreado?.edad || datosJugador?.edad}, equipo ${jugadorCreado?.equipo || datosJugador?.equipo}, nacionalidad ${jugadorCreado?.nacionalidad || datosJugador?.nacionalidad}, posicionId ${jugadorCreado?.posicion || datosJugador?.posicion}. Devuelve SOLO JSON valido con esta estructura exacta: {"perfilFicticio":{"apodo":"string","piernaHabil":"string","estiloDeJuego":"string","fortalezas":["string"],"debilidades":["string"],"historiaInventada":"string"},"estadisticasInventadas":{"velocidad":0,"tiro":0,"pase":0,"defensa":0,"fisico":0},"datoCurioso":"string"}. Las estadisticas deben ir de 1 a 99. Todo en espanol y sin markdown.`;
+
+		let caracteristicasIA = null;
+		let caracteristicasIATexto = null;
+
+		try {
+			const iaText = await generateGeminiText(prompt);
+			const parsed = parseGeminiJson(iaText);
+
+			if (parsed) {
+				caracteristicasIA = parsed;
+			} else {
+				caracteristicasIATexto = iaText;
+			}
+		} catch (error) {
+			caracteristicasIATexto = `No se pudieron generar caracteristicas IA: ${error?.message || "Error desconocido"}`;
+		}
 
 		return res.status(201).json({
 			message: "Jugador creado",
 			jugador: jugadorCreado,
+			equipoAsignado: equipoRandom,
+			caracteristicasIA,
+			caracteristicasIATexto,
 		});
 	} catch (error) {
 		console.error("Error al crear jugador:", error);

@@ -19,7 +19,7 @@ const jugadorSchema = new mongoose.Schema({
   },
   equipo: {
     type: String,
-    required: true,
+    required: false,
   },
   nacionalidad: {
     type: String,

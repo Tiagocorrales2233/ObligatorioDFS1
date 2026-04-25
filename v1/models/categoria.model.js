@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 const categoriaSchema = new mongoose.Schema({
     nombre: {
         type: String,
-        enum: ["Arquero", "Defensa", "Mediocampista", "Delantero"],
+        enum: ["Arquero", "Defensa", "Mediocampista", "Delantero","Lateral","Volante","Extremo","Pivote", "Falso 9", "Enganche", "Carrilero", "Libero", "Centrocampista Defensivo", "Centrocampista Ofensivo"],
         required: true,
     },
     descripcion: {
