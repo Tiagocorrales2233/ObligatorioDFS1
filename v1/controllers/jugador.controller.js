@@ -9,7 +9,7 @@ import axios from "axios";
 import { generateGeminiText } from "../services/gemini.services.js";
 import Usuario from "../models/usuario.model.js";
 import Jugador from "../models/jugador.model.js";
-import cloudinary from "../config/cloudinary.js";
+import { getConfiguredCloudinary } from "../config/cloudinary.js";
 import { uploadBufferToCloudinary } from "../utils/cloudinary.util.js";
 
 const paisesEnIngles = [
@@ -109,6 +109,7 @@ export const crearJugador = async (req, res) => {
 		let imagen = null;
 		if (req.file?.buffer) {
 			const folder = req.body?.folder || "jugadores";
+			const cloudinary = getConfiguredCloudinary();
 			const resultadoImagen = await uploadBufferToCloudinary(cloudinary, req.file.buffer, {
 				resource_type: "auto",
 				folder,

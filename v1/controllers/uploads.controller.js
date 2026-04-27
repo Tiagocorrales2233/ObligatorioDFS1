@@ -1,5 +1,5 @@
 import { upload } from "../middlewares/multer.middleware.js";
-import cloudinary from "../config/cloudinary.js";
+import { getConfiguredCloudinary } from "../config/cloudinary.js";
 import { runMulterSingle } from "../utils/multer.util.js";
 import { uploadBufferToCloudinary } from "../utils/cloudinary.util.js";
 
@@ -13,6 +13,7 @@ export const subirImagen = async (req, res) => {
 
         // Permitir especificar carpeta vía req.body.folder, por defecto 'uploads'
         const folder = req.body?.folder || "uploads";
+        const cloudinary = getConfiguredCloudinary();
 
         // Sube el buffer a Cloudinary usando la utilidad promisificada
         const result = await uploadBufferToCloudinary(cloudinary, req.file.buffer, {
