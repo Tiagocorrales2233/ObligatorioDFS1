@@ -20,7 +20,7 @@ router.use(authorizationMiddleware);
 //rutas protegidas
 router.use("/usuarios", usuariosRouter);
 router.use("/uploads", uploadsRouter);
-router.use("/ai", aiRouter);
 router.use("/categorias", categoriasRouter);
+router.use("/ai", aiRouter);
 router.use("/jugadores", jugadoresRouter);
 export default router;

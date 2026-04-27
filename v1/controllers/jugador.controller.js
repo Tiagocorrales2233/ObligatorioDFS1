@@ -7,6 +7,10 @@ import {
 } from "../services/jugador.services.js";
 import axios from "axios";
 import { generateGeminiText } from "../services/gemini.services.js";
+import Usuario from "../models/usuario.model.js";
+import Jugador from "../models/jugador.model.js";
+import cloudinary from "../config/cloudinary.js";
+import { uploadBufferToCloudinary } from "../utils/cloudinary.util.js";
 
 const paisesEnIngles = [
 	"Argentina",
@@ -86,11 +90,38 @@ export const crearJugador = async (req, res) => {
 			return res.status(401).json({ message: "No autorizado" });
 		}
 
+		const usuario = await Usuario.findById(usuarioId).select("plan");
+		if (!usuario) {
+			return res.status(404).json({ message: "Usuario no encontrado" });
+		}
+
+		const plan = String(usuario.plan || "").toLowerCase();
+		if (plan === "plus") {
+			const cantidadJugadores = await Jugador.countDocuments({ usuario: usuarioId });
+			if (cantidadJugadores >= 4) {
+				return res.status(403).json({
+					message: "Limite alcanzado para plan plus",
+					details: "El plan plus permite crear hasta 4 jugadores. Cambia a premium para crear ilimitados.",
+				});
+			}
+		}
+
+		let imagen = null;
+		if (req.file?.buffer) {
+			const folder = req.body?.folder || "jugadores";
+			const resultadoImagen = await uploadBufferToCloudinary(cloudinary, req.file.buffer, {
+				resource_type: "auto",
+				folder,
+			});
+			imagen = resultadoImagen.secure_url;
+		}
+
 		const equipoRandom = await obtenerEquipoRandomApiSports();
 
 		const jugadorCreado = await crearJugadorService({
 			...datosJugador,
 			equipo: equipoRandom,
+			imagen,
 			usuario: usuarioId,
 		});
 
@@ -116,6 +147,7 @@ export const crearJugador = async (req, res) => {
 			message: "Jugador creado",
 			jugador: jugadorCreado,
 			equipoAsignado: equipoRandom,
+			imagen,
 			caracteristicasIA,
 			caracteristicasIATexto,
 		});

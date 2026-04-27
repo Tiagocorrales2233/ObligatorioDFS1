@@ -21,6 +21,10 @@ const jugadorSchema = new mongoose.Schema({
     type: String,
     required: false,
   },
+  imagen: {
+    type: String,
+    required: false,
+  },
   nacionalidad: {
     type: String,
     required: true,

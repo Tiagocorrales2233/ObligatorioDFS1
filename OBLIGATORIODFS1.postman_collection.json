@@ -1,0 +1,693 @@
+{
+  "info": {
+    "_postman_id": "b0f4b9f4-6d3d-47d4-8b94-8a74e4f6f7a1",
+    "name": "OBLIGATORIODFS1 - Status Codes",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3000" },
+    { "key": "uniqueSuffix", "value": "" },
+    { "key": "adminEmail", "value": "" },
+    { "key": "adminPassword", "value": "Admin123" },
+    { "key": "clientEmail", "value": "" },
+    { "key": "clientPassword", "value": "Cliente123" },
+    { "key": "adminToken", "value": "" },
+    { "key": "clientToken", "value": "" },
+    { "key": "adminId", "value": "" },
+    { "key": "clientId", "value": "" },
+    { "key": "categoriaId", "value": "" },
+    { "key": "jugador1Id", "value": "" },
+    { "key": "jugador2Id", "value": "" },
+    { "key": "jugador3Id", "value": "" },
+    { "key": "jugador4Id", "value": "" },
+    { "key": "jugador5Id", "value": "" },
+    { "key": "randomObjectId", "value": "64b7f9f1e1a2b3c4d5e6f789" }
+  ],
+  "item": [
+    {
+      "name": "00 - Init y 404 Global",
+      "item": [
+        {
+          "name": "Init variables + 404 route no encontrada",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!pm.collectionVariables.get('uniqueSuffix')) {",
+                  "  const suffix = Date.now().toString();",
+                  "  pm.collectionVariables.set('uniqueSuffix', suffix);",
+                  "  pm.collectionVariables.set('adminEmail', 'admin_' + suffix + '@mail.com');",
+                  "  pm.collectionVariables.set('clientEmail', 'cliente_' + suffix + '@mail.com');",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 404', function () { pm.response.to.have.status(404); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/v1/no-existe-{{uniqueSuffix}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "01 - Auth",
+      "item": [
+        {
+          "name": "Register admin (201)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', function () { pm.response.to.have.status(201); });",
+                  "const json = pm.response.json();",
+                  "pm.test('Tiene token y usuario', function () {",
+                  "  pm.expect(json).to.have.property('token');",
+                  "  pm.expect(json).to.have.property('usuario');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{adminEmail}}\",\n  \"password\": \"{{adminPassword}}\",\n  \"confirmPassword\": \"{{adminPassword}}\",\n  \"rol\": \"admin\",\n  \"plan\": \"plus\"\n}"
+            },
+            "url": "{{baseUrl}}/v1/auth/register"
+          }
+        },
+        {
+          "name": "Register cliente plus (201)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', function () { pm.response.to.have.status(201); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{clientEmail}}\",\n  \"password\": \"{{clientPassword}}\",\n  \"confirmPassword\": \"{{clientPassword}}\",\n  \"rol\": \"cliente\",\n  \"plan\": \"plus\"\n}"
+            },
+            "url": "{{baseUrl}}/v1/auth/register"
+          }
+        },
+        {
+          "name": "Register inválido (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 400', function () { pm.response.to.have.status(400); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"mail-invalido\",\n  \"password\": \"123\",\n  \"confirmPassword\": \"456\"\n}"
+            },
+            "url": "{{baseUrl}}/v1/auth/register"
+          }
+        },
+        {
+          "name": "Register duplicado (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 400', function () { pm.response.to.have.status(400); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{adminEmail}}\",\n  \"password\": \"{{adminPassword}}\",\n  \"confirmPassword\": \"{{adminPassword}}\"\n}"
+            },
+            "url": "{{baseUrl}}/v1/auth/register"
+          }
+        },
+        {
+          "name": "Login admin (200 + guardar token/id)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+                  "const json = pm.response.json();",
+                  "pm.collectionVariables.set('adminToken', json.token);",
+                  "const payload = JSON.parse(atob(json.token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));",
+                  "pm.collectionVariables.set('adminId', payload.id);",
+                  "pm.test('Admin token guardado', function () {",
+                  "  pm.expect(pm.collectionVariables.get('adminToken')).to.be.a('string').and.not.empty;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{adminEmail}}\",\n  \"password\": \"{{adminPassword}}\"\n}"
+            },
+            "url": "{{baseUrl}}/v1/auth/login"
+          }
+        },
+        {
+          "name": "Login cliente (200 + guardar token/id)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+                  "const json = pm.response.json();",
+                  "pm.collectionVariables.set('clientToken', json.token);",
+                  "const payload = JSON.parse(atob(json.token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));",
+                  "pm.collectionVariables.set('clientId', payload.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{clientEmail}}\",\n  \"password\": \"{{clientPassword}}\"\n}"
+            },
+            "url": "{{baseUrl}}/v1/auth/login"
+          }
+        },
+        {
+          "name": "Login inválido (401)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 401', function () { pm.response.to.have.status(401); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{clientEmail}}\",\n  \"password\": \"PasswordErroneo123\"\n}"
+            },
+            "url": "{{baseUrl}}/v1/auth/login"
+          }
+        }
+      ]
+    },
+    {
+      "name": "02 - Auth Middleware",
+      "item": [
+        {
+          "name": "Sin token en ruta protegida (401)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 401', function () { pm.response.to.have.status(401); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/v1/categorias"
+          }
+        }
+      ]
+    },
+    {
+      "name": "03 - Categorias",
+      "item": [
+        {
+          "name": "Crear categoria inválida (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 400', function () { pm.response.to.have.status(400); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{clientToken}}", "type": "string" }] },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"PosicionInvalida\",\n  \"descripcion\": \"Test\"\n}"
+            },
+            "url": "{{baseUrl}}/v1/categorias"
+          }
+        },
+        {
+          "name": "Crear categoria válida (200 + guardar categoriaId)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+                  "const json = pm.response.json();",
+                  "if (json.posicion && json.posicion._id) pm.collectionVariables.set('categoriaId', json.posicion._id);",
+                  "pm.test('categoriaId guardado', function () { pm.expect(pm.collectionVariables.get('categoriaId')).to.be.a('string').and.not.empty; });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{clientToken}}", "type": "string" }] },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Defensa\",\n  \"descripcion\": \"Categoria para tests\",\n  \"usuario\": \"{{clientId}}\"\n}"
+            },
+            "url": "{{baseUrl}}/v1/categorias"
+          }
+        },
+        {
+          "name": "Obtener categorias (200)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Status 200', function () { pm.response.to.have.status(200); });"] } }],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{clientToken}}", "type": "string" }] },
+            "method": "GET",
+            "url": "{{baseUrl}}/v1/categorias"
+          }
+        },
+        {
+          "name": "Obtener categoria por id (200)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Status 200', function () { pm.response.to.have.status(200); });"] } }],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{clientToken}}", "type": "string" }] },
+            "method": "GET",
+            "url": "{{baseUrl}}/v1/categorias/{{categoriaId}}"
+          }
+        },
+        {
+          "name": "Actualizar categoria inválida (400)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Status 400', function () { pm.response.to.have.status(400); });"] } }],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{clientToken}}", "type": "string" }] },
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"nombre\": \"CategoriaNoValida\"\n}" },
+            "url": "{{baseUrl}}/v1/categorias/{{categoriaId}}"
+          }
+        },
+        {
+          "name": "Actualizar categoria válida (200)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Status 200', function () { pm.response.to.have.status(200); });"] } }],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{clientToken}}", "type": "string" }] },
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"nombre\": \"Defensa\",\n  \"descripcion\": \"Categoria actualizada\",\n  \"usuario\": \"{{clientId}}\"\n}" },
+            "url": "{{baseUrl}}/v1/categorias/{{categoriaId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "04 - Jugadores (Plus limit y Premium)",
+      "item": [
+        {
+          "name": "Crear jugador inválido (400)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Status 400', function () { pm.response.to.have.status(400); });"] } }],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{clientToken}}", "type": "string" }] },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"nombre\": \"A\"\n}" },
+            "url": "{{baseUrl}}/v1/jugadores"
+          }
+        },
+        {
+          "name": "Crear jugador 1 (201)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Status 201', function () { pm.response.to.have.status(201); });", "const j = pm.response.json(); if (j.jugador && j.jugador._id) pm.collectionVariables.set('jugador1Id', j.jugador._id);"] } }],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{clientToken}}", "type": "string" }] },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"nombre\": \"Jugador1\",\n  \"apellido\": \"Test\",\n  \"edad\": 22,\n  \"posicion\": \"{{categoriaId}}\",\n  \"nacionalidad\": \"Uruguay\"\n}" },
+            "url": "{{baseUrl}}/v1/jugadores"
+          }
+        },
+        {
+          "name": "Crear jugador 2 (201)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Status 201', function () { pm.response.to.have.status(201); });", "const j = pm.response.json(); if (j.jugador && j.jugador._id) pm.collectionVariables.set('jugador2Id', j.jugador._id);"] } }],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{clientToken}}", "type": "string" }] },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"nombre\": \"Jugador2\",\n  \"apellido\": \"Test\",\n  \"edad\": 23,\n  \"posicion\": \"{{categoriaId}}\",\n  \"nacionalidad\": \"Argentina\"\n}" },
+            "url": "{{baseUrl}}/v1/jugadores"
+          }
+        },
+        {
+          "name": "Crear jugador 3 (201)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Status 201', function () { pm.response.to.have.status(201); });", "const j = pm.response.json(); if (j.jugador && j.jugador._id) pm.collectionVariables.set('jugador3Id', j.jugador._id);"] } }],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{clientToken}}", "type": "string" }] },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"nombre\": \"Jugador3\",\n  \"apellido\": \"Test\",\n  \"edad\": 24,\n  \"posicion\": \"{{categoriaId}}\",\n  \"nacionalidad\": \"Chile\"\n}" },
+            "url": "{{baseUrl}}/v1/jugadores"
+          }
+        },
+        {
+          "name": "Crear jugador 4 (201)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Status 201', function () { pm.response.to.have.status(201); });", "const j = pm.response.json(); if (j.jugador && j.jugador._id) pm.collectionVariables.set('jugador4Id', j.jugador._id);"] } }],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{clientToken}}", "type": "string" }] },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"nombre\": \"Jugador4\",\n  \"apellido\": \"Test\",\n  \"edad\": 25,\n  \"posicion\": \"{{categoriaId}}\",\n  \"nacionalidad\": \"Mexico\"\n}" },
+            "url": "{{baseUrl}}/v1/jugadores"
+          }
+        },
+        {
+          "name": "Crear jugador 5 en PLUS (403)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Status 403', function () { pm.response.to.have.status(403); });"] } }],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{clientToken}}", "type": "string" }] },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"nombre\": \"Jugador5\",\n  \"apellido\": \"Test\",\n  \"edad\": 26,\n  \"posicion\": \"{{categoriaId}}\",\n  \"nacionalidad\": \"Brasil\"\n}" },
+            "url": "{{baseUrl}}/v1/jugadores"
+          }
+        },
+        {
+          "name": "Cliente intenta cambiar plan (403)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Status 403', function () { pm.response.to.have.status(403); });"] } }],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{clientToken}}", "type": "string" }] },
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"usuarioId\": \"{{clientId}}\",\n  \"plan\": \"premium\"\n}" },
+            "url": "{{baseUrl}}/v1/usuarios/cambiar-plan"
+          }
+        },
+        {
+          "name": "Admin cambia plan cliente a PREMIUM (200)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Status 200', function () { pm.response.to.have.status(200); });"] } }],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"usuarioId\": \"{{clientId}}\",\n  \"plan\": \"premium\"\n}" },
+            "url": "{{baseUrl}}/v1/usuarios/cambiar-plan"
+          }
+        },
+        {
+          "name": "Crear jugador 5 tras PREMIUM (201)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Status 201', function () { pm.response.to.have.status(201); });", "const j = pm.response.json(); if (j.jugador && j.jugador._id) pm.collectionVariables.set('jugador5Id', j.jugador._id);"] } }],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{clientToken}}", "type": "string" }] },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"nombre\": \"Jugador5Premium\",\n  \"apellido\": \"Test\",\n  \"edad\": 27,\n  \"posicion\": \"{{categoriaId}}\",\n  \"nacionalidad\": \"Colombia\"\n}" },
+            "url": "{{baseUrl}}/v1/jugadores"
+          }
+        },
+        {
+          "name": "Admin cambia plan inválido (400)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Status 400', function () { pm.response.to.have.status(400); });"] } }],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"usuarioId\": \"{{clientId}}\",\n  \"plan\": \"gold\"\n}" },
+            "url": "{{baseUrl}}/v1/usuarios/cambiar-plan"
+          }
+        },
+        {
+          "name": "Admin cambia plan con usuario inexistente (404)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Status 404', function () { pm.response.to.have.status(404); });"] } }],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"usuarioId\": \"{{randomObjectId}}\",\n  \"plan\": \"plus\"\n}" },
+            "url": "{{baseUrl}}/v1/usuarios/cambiar-plan"
+          }
+        },
+        {
+          "name": "Admin vuelve plan cliente a PLUS (200)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Status 200', function () { pm.response.to.have.status(200); });"] } }],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"usuarioId\": \"{{clientId}}\",\n  \"plan\": \"plus\"\n}" },
+            "url": "{{baseUrl}}/v1/usuarios/cambiar-plan"
+          }
+        },
+        {
+          "name": "Admin intenta mismo plan PLUS (400)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Status 400', function () { pm.response.to.have.status(400); });"] } }],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"usuarioId\": \"{{clientId}}\",\n  \"plan\": \"plus\"\n}" },
+            "url": "{{baseUrl}}/v1/usuarios/cambiar-plan"
+          }
+        },
+        {
+          "name": "Listar jugadores (200)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Status 200', function () { pm.response.to.have.status(200); });"] } }],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{clientToken}}", "type": "string" }] },
+            "method": "GET",
+            "url": "{{baseUrl}}/v1/jugadores"
+          }
+        },
+        {
+          "name": "Obtener jugador por id existente (200)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Status 200', function () { pm.response.to.have.status(200); });"] } }],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{clientToken}}", "type": "string" }] },
+            "method": "GET",
+            "url": "{{baseUrl}}/v1/jugadores/{{jugador1Id}}"
+          }
+        },
+        {
+          "name": "Obtener jugador por id inexistente (404)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Status 404', function () { pm.response.to.have.status(404); });"] } }],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{clientToken}}", "type": "string" }] },
+            "method": "GET",
+            "url": "{{baseUrl}}/v1/jugadores/{{randomObjectId}}"
+          }
+        },
+        {
+          "name": "Actualizar jugador inválido (400)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Status 400', function () { pm.response.to.have.status(400); });"] } }],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{clientToken}}", "type": "string" }] },
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"nombre\": \"x\"\n}" },
+            "url": "{{baseUrl}}/v1/jugadores/{{jugador2Id}}"
+          }
+        },
+        {
+          "name": "Actualizar jugador existente (200)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Status 200', function () { pm.response.to.have.status(200); });"] } }],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{clientToken}}", "type": "string" }] },
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"nombre\": \"Jugador2Edit\",\n  \"apellido\": \"Editado\",\n  \"edad\": 29,\n  \"posicion\": \"{{categoriaId}}\",\n  \"nacionalidad\": \"Uruguay\"\n}" },
+            "url": "{{baseUrl}}/v1/jugadores/{{jugador2Id}}"
+          }
+        },
+        {
+          "name": "Actualizar jugador inexistente (404)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Status 404', function () { pm.response.to.have.status(404); });"] } }],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{clientToken}}", "type": "string" }] },
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"nombre\": \"JugadorX\",\n  \"apellido\": \"X\",\n  \"edad\": 30,\n  \"posicion\": \"{{categoriaId}}\",\n  \"nacionalidad\": \"Brasil\"\n}" },
+            "url": "{{baseUrl}}/v1/jugadores/{{randomObjectId}}"
+          }
+        },
+        {
+          "name": "Eliminar jugador existente (200)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Status 200', function () { pm.response.to.have.status(200); });"] } }],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{clientToken}}", "type": "string" }] },
+            "method": "DELETE",
+            "url": "{{baseUrl}}/v1/jugadores/{{jugador3Id}}"
+          }
+        },
+        {
+          "name": "Eliminar jugador inexistente (404)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Status 404', function () { pm.response.to.have.status(404); });"] } }],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{clientToken}}", "type": "string" }] },
+            "method": "DELETE",
+            "url": "{{baseUrl}}/v1/jugadores/{{jugador3Id}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "05 - Uploads",
+      "item": [
+        {
+          "name": "Upload sin token (401)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Status 401', function () { pm.response.to.have.status(401); });"] } }],
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/v1/uploads"
+          }
+        },
+        {
+          "name": "Upload sin archivo (400)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Status 400', function () { pm.response.to.have.status(400); });"] } }],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{clientToken}}", "type": "string" }] },
+            "method": "POST",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "folder", "value": "uploads", "type": "text" }
+              ]
+            },
+            "url": "{{baseUrl}}/v1/uploads"
+          }
+        }
+      ]
+    },
+    {
+      "name": "06 - IA",
+      "item": [
+        {
+          "name": "GET modelos IA (200)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Status 200', function () { pm.response.to.have.status(200); });"] } }],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{clientToken}}", "type": "string" }] },
+            "method": "GET",
+            "url": "{{baseUrl}}/v1/ai"
+          }
+        },
+        {
+          "name": "POST IA sin prompt (400)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Status 400', function () { pm.response.to.have.status(400); });"] } }],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{clientToken}}", "type": "string" }] },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{}" },
+            "url": "{{baseUrl}}/v1/ai"
+          }
+        },
+        {
+          "name": "POST IA prompt válido (200 o 500 por proveedor)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200 o 500', function () {",
+                  "  pm.expect([200, 500]).to.include(pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{clientToken}}", "type": "string" }] },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"prompt\": \"Decime quien es Lionel Messi en una linea\"\n}" },
+            "url": "{{baseUrl}}/v1/ai"
+          }
+        },
+        {
+          "name": "POST IA /gemini-2.5-flash sin prompt (400)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Status 400', function () { pm.response.to.have.status(400); });"] } }],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{clientToken}}", "type": "string" }] },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{}" },
+            "url": "{{baseUrl}}/v1/ai/gemini-2.5-flash"
+          }
+        }
+      ]
+    },
+    {
+      "name": "07 - Cleanup",
+      "item": [
+        {
+          "name": "Eliminar categoria (200)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Status 200', function () { pm.response.to.have.status(200); });"] } }],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{clientToken}}", "type": "string" }] },
+            "method": "DELETE",
+            "url": "{{baseUrl}}/v1/categorias/{{categoriaId}}"
+          }
+        }
+      ]
+    }
+  ]
+}
