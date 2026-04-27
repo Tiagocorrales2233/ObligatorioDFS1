@@ -10,7 +10,7 @@ import {
 	actualizarJugador,
 	eliminarJugador,
 } from "../controllers/jugador.controller.js";
-import { jugadorSchema } from "../validators/jugador.validators.js";
+import { jugadorSchema, jugadorUpdateSchema } from "../validators/jugador.validators.js";
 
 const router = express.Router({ mergeParams: true });
 
@@ -29,7 +29,7 @@ const parseJugadorImagen = async (req, res, next) => {
 router.post("/", authorizationMiddleware, parseJugadorImagen, validateBodyMiddleware(jugadorSchema), crearJugador);
 router.get("/", authorizationMiddleware, obtenerJugadores);
 router.get("/:id", authorizationMiddleware, obtenerJugadorPorId);
-router.patch("/:id", authorizationMiddleware, validateBodyMiddleware(jugadorSchema), actualizarJugador);
+router.patch("/:id", authorizationMiddleware, validateBodyMiddleware(jugadorUpdateSchema), actualizarJugador);
 router.delete("/:id", authorizationMiddleware, eliminarJugador);
 
 export default router;
